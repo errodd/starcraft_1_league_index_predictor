@@ -27,6 +27,7 @@ ml_proyecto/
 ├── notebooks/
 │   ├── 01_eda.ipynb                 # Comprehensive Exploratory Data Analysis
 │   ├── 02_data_preparation.ipynb    # Preprocessing, transformations, and train/test split
+│   ├── 03_modeling_and_model_selection.ipynb # Model benchmarking, Optuna tuning, and final test evaluation
 │   └── logo-facty.jpeg              # University institutional logo (local reference)
 ├── figures/                         # Exported exploratory and analytical plots
 ├── logo-facty.jpeg                  # University institutional logo (root reference)
@@ -53,14 +54,22 @@ ml_proyecto/
   * **Ablation Study Protocol:** Definition of 5 experimental feature configurations to benchmark CSI and domain aggregations in modeling.
   * **Reproducible Handoff:** Export of raw partition files (`X_train_raw.csv`, `X_test_raw.csv`, `y_train.csv`, `y_test.csv`) and JSON metadata manifest (`data_preparation_metadata.json`).
 
+* **`notebooks/03_modeling_and_model_selection.ipynb` (Model Selection & Hyperparameter Optimization):**
+  * **Evaluation Protocol:** `Macro-F1` as primary metric (treating all leagues equitably), complemented by `Balanced Accuracy`, `Accuracy` (vs. 23.90% baseline), and `Ordinal MAE`. 5-Fold Stratified Cross-Validation with strict vaulting of the test set.
+  * **Feature Ablation Study:** Empirical benchmarking demonstrating that `CognitiveSpeedIndex` captures vital non-linear telemetry interactions and that the tenure proxy `WeeksOfPlay` boosts cross-validation F1.
+  * **Multi-Family Benchmarking:** Evaluated `DummyClassifier`, `LogisticRegression` (balanced), `RandomForestClassifier` (balanced), and `HistGradientBoostingClassifier` (balanced) across identical folds.
+  * **Hyperparameter Optimization with Optuna:** 25-trial Bayesian optimization (`TPESampler`) tuning learning rate, regularization, leaf nodes, and minimum leaf samples within cross-validation folds.
+  * **Single Test Set Evaluation:** Unsealed the test vault for a single final evaluation, achieving **40.06% Accuracy** (vs. 23.90% baseline), **Macro-F1 = 0.4454**, and **Ordinal MAE = 0.7953** tiers.
+  * **Clinical Error Analysis:** Demonstrated that **83.65%** of all test predictions fall within $\pm 1$ adjacent league tier, and **90.9%** (10 of 11) of Professional players (League 8) were correctly identified solely through gameplay telemetry.
+
 ---
 
 ## Key Findings
 
-1. **Structured Missingness in League 8:** All 55 Professional players (League 8) lack demographic data (`Age`, `TotalHours`, `HoursPerWeek`). Rather than dropping these rows (which would eliminate the entire professional tier), missing values are preserved and handled via stratified post-split imputation.
+1. **Structured Missingness in League 8:** All 55 Professional players (League 8) lack demographic data (`Age`, `TotalHours`, `HoursPerWeek`). Rather than dropping these rows (which would eliminate the entire professional tier), missing values are preserved and handled via stratified post-split imputation without missing indicators.
 2. **Telemetry Associations:** In-game mechanical telemetry metrics show the strongest observed linear associations with competitive rank: lower `ActionLatency` ($r = -0.67$) and higher `APM` ($r = 0.66$) strongly correspond to elite tiers.
-3. **Candidate Feature (CognitiveSpeedIndex):** The composite ratio combines reaction speed and pace ($r = 0.659$). Its true capability to resolve multicollinearity without sacrificing predictive accuracy will be empirically evaluated during modeling against raw features.
-4. **Class Imbalance & Baseline:** The dataset exhibits a bell-shaped distribution centered around middle tiers, with severe scarcity in extreme classes (League 1: 4.92%, League 7: 1.03%, League 8: 1.62%). The majority class is League 4 (Platinum), establishing a naive baseline accuracy of **23.90%**.
+3. **Engineered Feature Impact:** The `CognitiveSpeedIndex` and domain transforms proved empirically superior to raw telemetry alone in cross-validation ablation testing.
+4. **Generalization Performance:** The tuned `HistGradientBoostingClassifier` achieved **40.06% test accuracy** (substantially surpassing the 23.90% naive baseline) and an impressive **90.9% recall on League 8**, with over 83% of predictions falling within $\pm 1$ league tier.
 
 ---
 
@@ -84,4 +93,9 @@ Launch Jupyter Lab or Notebook from the repository root:
 jupyter lab
 ```
 
-Navigate to `notebooks/` and execute `01_eda.ipynb` or `02_data_preparation.ipynb`. All relative paths to data (`../data/SkillCraft1_Dataset.csv`) and assets will resolve automatically.
+Navigate to `notebooks/` and execute in sequential order:
+1. `01_eda.ipynb`
+2. `02_data_preparation.ipynb`
+3. `03_modeling_and_model_selection.ipynb`
+
+All relative paths to data (`../data/`) and assets will resolve automatically.
