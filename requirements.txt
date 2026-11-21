@@ -17,4 +17,4 @@ optuna==5.0.0
 # Interactive Jupyter Notebook Environment
 jupyterlab==4.6.3
 notebook==7.6.2
-ipykernel==7.3.0
+ipykernel==7.3.0 
